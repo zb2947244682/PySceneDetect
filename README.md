@@ -6,6 +6,8 @@
 
 # Video Cut Detection and Analysis Tool
 
+> **Fork Notice**: This is a personalized fork of [Breakthrough/PySceneDetect](https://github.com/Breakthrough/PySceneDetect), maintained by [@zb2947244682](https://github.com/zb2947244682). It includes the original PySceneDetect library plus an additional batch scene extraction workflow for automated frame extraction from video directories.
+
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Breakthrough/PySceneDetect/build.yml)](https://github.com/Breakthrough/PySceneDetect/actions)
 [![PyPI Status](https://img.shields.io/pypi/status/scenedetect.svg)](https://pypi.python.org/pypi/scenedetect/)
 [![PyPI Version](https://img.shields.io/pypi/v/scenedetect?color=blue)](https://pypi.python.org/pypi/scenedetect/)
@@ -14,6 +16,8 @@
 ----------------------------------------------------------
 
 ### Latest Release: v0.7 (May 3, 2026)
+
+**Fork**: `zb2947244682/PySceneDetect` | **Upstream**: `Breakthrough/PySceneDetect`
 
 **Website**:  [scenedetect.com](https://www.scenedetect.com)
 
@@ -100,6 +104,33 @@ def split_video_into_scenes(video_path, threshold=27.0):
 
 See [the documentation](https://www.scenedetect.com/docs/latest/api.html) for more examples.
 
+## Batch Scene Extraction Workflow
+
+This fork includes a reusable batch workflow for processing directories of video files. It detects scenes, extracts 3 representative frames per scene (start / middle / end), renames them to a standardized `{scene_num}_{MMSSFF}_{position}.jpg` format, and generates a per-video `index.json` with frame-level metadata.
+
+See [`VIDEO_SCENE_EXTRACTION_WORKFLOW.md`](VIDEO_SCENE_EXTRACTION_WORKFLOW.md) for:
+
+- Complete Python script template ready for copy-paste
+- Naming convention and JSON index format
+- Threshold calibration guide (tuning `ContentDetector` for target scene counts)
+- Optional video splitting with `split_video_ffmpeg`
+
+Quick example:
+
+```python
+from scenedetect import open_video, SceneManager, ContentDetector
+from scenedetect.output import save_images
+
+video = open_video("video.mp4")
+scene_manager = SceneManager()
+scene_manager.add_detector(ContentDetector(threshold=33.0))
+scene_manager.detect_scenes(video, show_progress=True)
+scene_list = scene_manager.get_scene_list(start_in_scene=True)
+
+video.reset()
+save_images(scene_list, video, num_images=3, output_dir="scenes/", show_progress=True)
+```
+
 **Benchmark**:
 
 We evaluate the performance of different detectors in terms of accuracy and processing speed. See the [benchmark report](benchmark/README.md) for details.
@@ -112,10 +143,13 @@ We evaluate the performance of different detectors in terms of accuracy and proc
 
 ## Help & Contributing
 
-Please submit any bugs/issues or feature requests to [the Issue Tracker](https://github.com/Breakthrough/PySceneDetect/issues). Before submission, ensure you search through existing issues (both open and closed) to avoid creating duplicate entries.
-Pull requests are welcome and encouraged.  PySceneDetect is released under the BSD 3-Clause license, and submitted code should be compliant.
+**Upstream Issues**: For bugs in the core PySceneDetect library, please submit to the [upstream Issue Tracker](https://github.com/Breakthrough/PySceneDetect/issues).
 
-For help or other issues, you can join [the official PySceneDetect Discord Server](https://discord.gg/H83HbJngk7), submit an issue/bug report [here on Github](https://github.com/Breakthrough/PySceneDetect/issues), or contact me via [my website](https://bcastell.com/about/).
+**Fork Issues**: For questions or issues specific to the batch scene extraction workflow in this fork, open an issue on [this repository](https://github.com/zb2947244682/PySceneDetect/issues).
+
+Before submission, ensure you search through existing issues (both open and closed) to avoid creating duplicate entries. Pull requests are welcome and encouraged. PySceneDetect is released under the BSD 3-Clause license, and submitted code should be compliant.
+
+For help or other issues, you can join [the official PySceneDetect Discord Server](https://discord.gg/H83HbJngk7), submit an issue/bug report [here on Github](https://github.com/Breakthrough/PySceneDetect/issues), or contact the original author via [his website](https://bcastell.com/about/).
 
 ## Code Signing
 
@@ -128,4 +162,5 @@ BSD-3-Clause; see [`LICENSE`](LICENSE) and [`THIRD-PARTY.md`](THIRD-PARTY.md) fo
 ----------------------------------------------------------
 
 Copyright (C) 2014 Brandon Castellano.
+Fork maintained by [@zb2947244682](https://github.com/zb2947244682).
 All rights reserved.

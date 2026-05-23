@@ -135,6 +135,46 @@ def batch_process(input_dir, detector_threshold=33.0):
         process_video(video_path, input_dir, detector_threshold=detector_threshold)
 ```
 
+## Production Tips
+
+### Error Handling
+
+When processing large batches, some video files may be corrupted or unreadable. Wrap the call in a try-except to skip bad files and continue:
+
+```python
+def batch_process(input_dir, detector_threshold=33.0):
+    video_files = sorted(glob.glob(os.path.join(input_dir, "*.mp4")))
+    total = len(video_files)
+    for idx, video_path in enumerate(video_files, 1):
+        print(f"[Progress {idx}/{total}] {video_path}")
+        try:
+            num_scenes = process_video(video_path, input_dir, detector_threshold=detector_threshold)
+            print(f"  -> {num_scenes} scenes extracted.")
+        except Exception as e:
+            print(f"  -> FAILED: {e}")
+```
+
+### Resume Interrupted Batches
+
+To avoid re-processing videos after an interruption, check for an existing output directory and skip:
+
+```python
+output_dir = os.path.join(input_dir, f"{video_name}_scenes")
+if os.path.exists(os.path.join(output_dir, "index.json")):
+    print(f"  -> Skipping (already processed).")
+    continue
+```
+
+### Memory Management
+
+`open_video()` holds file handles and internal buffers. When processing many videos in a loop, ensure the variable is overwritten or explicitly deleted so the previous video's resources are released before the next one opens:
+
+```python
+video = open_video(video_path)
+# ... process ...
+del video  # optional, but helps on memory-constrained systems
+```
+
 ## Naming Convention
 
 ### Image Files
@@ -243,6 +283,19 @@ split_video_ffmpeg(
 ```
 
 For frame-accurate cuts, omit `arg_override` to use the default re-encode settings (much slower).
+
+### Multi-Format Support
+
+The batch template uses `*.mp4` by default. To process other formats (`.mkv`, `.avi`, `.mov`), expand the glob pattern:
+
+```python
+import itertools
+
+video_files = sorted(itertools.chain.from_iterable(
+    glob.glob(os.path.join(input_dir, ext))
+    for ext in ["*.mp4", "*.mkv", "*.avi", "*.mov"]
+))
+```
 
 ## Notes
 
